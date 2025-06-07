@@ -1,12 +1,12 @@
 package com.dogsnouts.cleopatra;
 
-public class SecretBonusCard {
+class SecretBonusCard {
 
-    /*
-    groups:
-        Praetor (2)
-        Quaestor (2)
-        Senator (2)
-     */
+    private Vote vote;
+
+    //can only be Praetor, Quaestor, or Senator
+    SecretBonusCard(Vote vote) {
+        this.vote = vote;
+    }
 
 }

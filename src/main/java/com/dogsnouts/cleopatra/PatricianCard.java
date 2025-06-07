@@ -1,21 +1,26 @@
 package com.dogsnouts.cleopatra;
 
-public class PatricianCard {
+class PatricianCard implements Comparable<PatricianCard> {
 
-    private final Group.GroupName group;
+    private final Vote group;
     private final String name;
 
-    public PatricianCard(Group.GroupName group, String name) {
+    PatricianCard(Vote group, String name) {
         this.group = group;
         this.name = name;
     }
 
-    public Group.GroupName getGroup() {
+    Vote getGroup() {
         return group;
     }
 
-    public String getName() {
+    String getName() {
         return name;
+    }
+
+    @Override
+    public int compareTo(PatricianCard o) {
+        return group.ordinal() - o.group.ordinal();
     }
 
 }

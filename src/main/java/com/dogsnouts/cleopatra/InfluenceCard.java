@@ -1,23 +1,34 @@
 package com.dogsnouts.cleopatra;
 
-public class InfluenceCard extends PlayableCard {
+class InfluenceCard extends PlayableCard {
 
-    private final int value;
+    private final int value; //implement value as enum?
     private boolean isFaceUp = false;
 
-    public InfluenceCard(int value) {
+    InfluenceCard(int value) {
         this.value = value;
     }
 
-    public int getValue() {
+    @Override
+    public int compareTo(PlayableCard o) {
+        if (o instanceof ActionCard) {
+            return -10; //should a less arbitrary value be used?
+        }
+        if (o instanceof InfluenceCard ic) {
+            return value - ic.value;
+        }
+        throw new IllegalArgumentException("Unsupported card type");
+    }
+
+    int getValue() {
         return value;
     }
 
-    public boolean isFaceUp() {
+    boolean isFaceUp() {
         return isFaceUp;
     }
 
-    public void flipCardOver(){
+    void flipCardOver() {
         isFaceUp = !isFaceUp;
     }
 

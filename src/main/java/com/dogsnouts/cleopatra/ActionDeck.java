@@ -2,45 +2,27 @@ package com.dogsnouts.cleopatra;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.function.Consumer;
-import java.util.stream.IntStream;
+import java.util.List;
 
-public class ActionDeck {
+import static com.dogsnouts.cleopatra.ActionCard.CardType.*;
 
-    ArrayList<ActionCard> deck = new ArrayList<>();
-
-    private static void doRepeatedly(int iterations, Consumer<Integer> op) {
-        for (int i = 0; i < iterations; i++) {
-            op.accept(i);
-        }
-    }
+class ActionDeck extends Deck {
 
     ActionDeck() {
-        doRepeatedly(4, i -> {
-            deck.add(new AssassinationCard());
-        });
-        doRepeatedly(2, i-> {
-            deck.add(new SpyCard());
-            deck.add(new CastlingCard());
-            deck.add(new ScoutCard());
-            deck.add(new VetoCard());
-        });
+        List<PlayableCard> deck = getDeck();
 
-        deck.add(new WrathOfGodCard());
+        doRepeatedly(4, i ->
+            deck.add(new ActionCard(Assassination))
+        );
+        doRepeatedly(2, i-> {
+            deck.add(new ActionCard(Spy));
+            deck.add(new ActionCard(Castling));
+            deck.add(new ActionCard(Scout));
+            deck.add(new ActionCard(Veto));
+        });
+        deck.add(new ActionCard(WrathOfGod));
 
         Collections.shuffle(deck);
-    }
-
-    ActionCard drawCard() {
-        if (!deck.isEmpty()) {
-            return deck.remove(0);
-        } else {
-            //error
-        }
-    }
-
-    boolean isEmpty() {
-        return deck.isEmpty();
     }
 
 }

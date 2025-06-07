@@ -1,20 +1,15 @@
 package com.dogsnouts.cleopatra;
 
-public class VoteOfConfCard {
+class VoteOfConfCard {
 
-    private Enum voteType;
+    private final Vote vote;
 
-    public enum NonGroupVoteType {
-        ORGY,
-        ORGY_RESHUFFLE
+    VoteOfConfCard(Vote vote) {
+        this.vote = vote;
     }
 
-    public VoteOfConfCard(Group.GroupName voteType) {
-        this.voteType = voteType;
-    }
-
-    public Enum getVoteType() {
-        return voteType;
+    Vote getVote() {
+        return vote;
     }
 
 }

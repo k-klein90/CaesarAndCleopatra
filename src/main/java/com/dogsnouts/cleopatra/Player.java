@@ -1,65 +1,94 @@
 package com.dogsnouts.cleopatra;
 
-import java.util.ArrayList;
+import java.util.*;
 
-public class Player {
+class Player {
 
-    ActionDeck actionDeck = new ActionDeck();
-    InfluenceDeck influenceDeck = new InfluenceDeck();
-    SecretBonusCard secretBonus;
-    Hand hand = new Hand();
-    ArrayList<PatricianCard> wonPatricians = new ArrayList<>();
+    private final ActionDeck actionDeck = new ActionDeck();
+    private final InfluenceDeck influenceDeck = new InfluenceDeck();
+    private final SecretBonusCard secretBonus;
+    private final Hand hand = new Hand();
+    private final Set<PatricianCard> wonPatricians = new TreeSet<>();
 
-    public Player(){
-        //secret bonus
+    Player() {
+        List<Vote> secretBonusVotes = List.of(Vote.Praetor, Vote.Quaestor, Vote.Senator);
+        secretBonus = new SecretBonusCard(secretBonusVotes.get( new Random().nextInt(secretBonusVotes.size()) ));
     }
 
-    public boolean canDrawInfluenceCards(){
-        return influenceDeck.deck.isEmpty();
+    ActionDeck getActionDeck() {
+        return actionDeck;
     }
 
-    private boolean canPlayInfluenceCard(){
-        //if, for each patrician group, either 5 I cards on player's side or 8 I cards total, return false; else true
+    InfluenceDeck getInfluenceDeck() {
+        return influenceDeck;
+    }
+
+    SecretBonusCard getSecretBonus() {
+        return secretBonus;
+    }
+
+    Hand getHand() {
+        return hand;
+    }
+
+    Set<PatricianCard> getWonPatricians() {
+        return wonPatricians;
+    }
+
+    private boolean canDrawInfluenceCards() {
+        return influenceDeck.isEmpty();
+    }
+
+    private boolean canDrawActionCards() {
+        return actionDeck.isEmpty();
+    }
+
+    boolean hasInfluenceCardInHand() {
+        return hand.containsInfluenceCard();
+    }
+
+    //adequate name? returns whether the player has any more I cards to play
+    boolean canPlayInfluenceCards() {
+        if (hasInfluenceCardInHand()
+            || canDrawInfluenceCards()) {
+                return true;
+        }
         return false;
     }
 
-    //subpar name; misses nuance
-    private boolean canPlayActionCard(){
-        //if, for all A cards in hand, none can allow player to play an I card, return false; else true
+    //subpar name; misses nuance (can play an action card that allows more I cards to be played)
+    boolean canPlayActionCards() {
+        if (hasActionCardInHand(ActionCard.CardType.Assassination)
+            || hasActionCardInHand(ActionCard.CardType.WrathOfGod)
+            || canDrawActionCard(ActionCard.CardType.Assassination)
+            || canDrawActionCard(ActionCard.CardType.WrathOfGod)) {
+                return true;
+        }
         return false;
     }
 
-    //incorporate canPlay() methods into this one method?
-    public boolean canTakeTurn(){
-        return (!canPlayInfluenceCard() && !canPlayActionCard() && !actionDeck.isEmpty());
+    void removeCardFromHand(PlayableCard card) {
+        hand.removeCard(card);
     }
 
-    public void takeTurn(){
-        if (canTakeTurn()){
-            if (canPlayInfluenceCard() && hand.containsInfluenceCard()) {
-                //make both active and passive turns available
-                //(go to UI, which calls either takeActive- or takePassiveTurn() depending on user input)
-            } else {
-                //tell player they either cannot play I card or have no I cards to play;
-                //make only passive turn available
-                //(go to UI, which must call takePassiveTurn())
-            }
+    void drawActionCard() {
+        if (canDrawActionCards()) {
+            hand.addCard(actionDeck.drawCard());
         } else {
-            //tell player they cannot play;
-            //skip turn
+            //error
         }
     }
 
-    public void takeActiveTurn(){
-
+    void drawInfluenceCard() {
+        if (canDrawInfluenceCards()) {
+            hand.addCard(influenceDeck.drawCard());
+        } else {
+            //error
+        }
     }
 
-    public void takePassiveTurn(){
-
-    }
-
-    public void drawActionCard(){
-
+    void addWonPatrician(PatricianCard patrician) {
+        wonPatricians.add(patrician);
     }
 
 }
