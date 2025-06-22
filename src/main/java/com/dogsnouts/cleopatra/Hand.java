@@ -18,11 +18,14 @@ class Hand {
         fillStarterHand();
     }
 
-    //better name? maybe "fillHandDefault"?
     void fillStarterHand() {
         doRepeatedly(5, i ->
             hand.add(new InfluenceCard(i+1))
         );
+    }
+
+    Set<PlayableCard> getCards() {
+        return hand;
     }
 
     //is error handling necessary or can hand.remove(card) be used in place of this method?
@@ -33,7 +36,7 @@ class Hand {
         }
     }
 
-    //hand size should be tested before removing card from deck
+    //hand size should be tested before removing card from deck?
     void addCard(PlayableCard card) {
         if (hand.size() < 5) {
             hand.add(card);
@@ -42,16 +45,15 @@ class Hand {
         }
     }
 
-    Set<PlayableCard> getCards() {
-        return hand;
-    }
-
     boolean containsInfluenceCard() {
         return hand.stream().anyMatch(playableCard -> playableCard instanceof InfluenceCard);
     }
 
-    boolean ContainsActionCard(ActionCard actionCard) {
-        //
+    //good implementation?
+    boolean containsActionCard(ActionCard.CardType cardType) {
+        return hand.stream().filter(card -> card instanceof ActionCard).anyMatch(
+            card -> ((ActionCard) card).getCardType() == cardType
+        );
     }
 
 }

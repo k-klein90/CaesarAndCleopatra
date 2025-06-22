@@ -53,4 +53,8 @@ class PatricianGroup {
         return cards.isEmpty();
     }
 
+    PatricianCard removePatrician() {
+        return cards.remove(0);
+    }
+
 }

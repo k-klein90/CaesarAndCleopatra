@@ -9,7 +9,10 @@ class Player {
     private final SecretBonusCard secretBonus;
     private final Hand hand = new Hand();
     private final Set<PatricianCard> wonPatricians = new TreeSet<>();
+    private int numInfluenceRemovingCards = ActionCard.CardType.Assassination.getCardCount()
+                                            + ActionCard.CardType.WrathOfGod.getCardCount();
 
+    //select secret bonus card randomly
     Player() {
         List<Vote> secretBonusVotes = List.of(Vote.Praetor, Vote.Quaestor, Vote.Senator);
         secretBonus = new SecretBonusCard(secretBonusVotes.get( new Random().nextInt(secretBonusVotes.size()) ));
@@ -43,32 +46,35 @@ class Player {
         return actionDeck.isEmpty();
     }
 
-    boolean hasInfluenceCardInHand() {
+    boolean hasInfluenceCardsInHand() {
         return hand.containsInfluenceCard();
     }
 
+    boolean hasInfluenceRemovingCardsInHand() {
+        return hand.containsActionCard(ActionCard.CardType.Assassination)
+            || hand.containsActionCard(ActionCard.CardType.WrathOfGod);
+    }
+
     //adequate name? returns whether the player has any more I cards to play
-    boolean canPlayInfluenceCards() {
-        if (hasInfluenceCardInHand()
+    boolean hasAnyInfluenceCards() {
+        if (hasInfluenceCardsInHand()
             || canDrawInfluenceCards()) {
                 return true;
         }
         return false;
     }
 
-    //subpar name; misses nuance (can play an action card that allows more I cards to be played)
-    boolean canPlayActionCards() {
-        if (hasActionCardInHand(ActionCard.CardType.Assassination)
-            || hasActionCardInHand(ActionCard.CardType.WrathOfGod)
-            || canDrawActionCard(ActionCard.CardType.Assassination)
-            || canDrawActionCard(ActionCard.CardType.WrathOfGod)) {
-                return true;
-        }
-        return false;
+    boolean hasAnyInfluenceRemovingCards() {
+        return (numInfluenceRemovingCards != 0);
     }
 
     void removeCardFromHand(PlayableCard card) {
         hand.removeCard(card);
+        if (card instanceof ActionCard
+            && ( ((ActionCard) card).getCardType().equals(ActionCard.CardType.Assassination)
+                 || ((ActionCard) card).getCardType().equals(ActionCard.CardType.WrathOfGod) )) {
+            numInfluenceRemovingCards--;
+        }
     }
 
     void drawActionCard() {

@@ -7,6 +7,7 @@ class InfluenceGroup implements Comparable<InfluenceGroup> {
 
     private final List<InfluenceCard> cards = new ArrayList<>();
     private final Vote group;
+    private int otherPlayerNumCards = 0;
 
     InfluenceGroup(Vote group) {
         this.group = group;
@@ -17,21 +18,11 @@ class InfluenceGroup implements Comparable<InfluenceGroup> {
     }
 
     int getCardSum() {
-        int sum = 0;
-        for (InfluenceCard card : cards) {
-            sum += card.getValue();
-        }
-        return sum;
+        return cards.stream().mapToInt(card -> card.getValue()).sum();
     }
 
     int getNumPhilosophers() {
-        int numPhilosophers = 0;
-        for (InfluenceCard card : cards) {
-            if (card.getValue() == 0) {
-                numPhilosophers++;
-            }
-        }
-        return numPhilosophers;
+        return (int) cards.stream().filter(card -> card.getValue() == 0).count();
     }
 
     //return a positive value if you win the vote of confidence
@@ -39,9 +30,8 @@ class InfluenceGroup implements Comparable<InfluenceGroup> {
     public int compareTo(InfluenceGroup o) {
         if (getNumPhilosophers() == o.getNumPhilosophers()) {
             return getCardSum() - o.getCardSum();
-        } else {
-            return o.getCardSum() - getCardSum();
         }
+        return o.getCardSum() - getCardSum();
     }
 
     int getNumCards() {
@@ -64,54 +54,30 @@ class InfluenceGroup implements Comparable<InfluenceGroup> {
     }
 
     void removeHighestCard() {
-        InfluenceCard highestCard = cards.get(0);
-        for (InfluenceCard card : cards) {
-            if (card.getValue() > highestCard.getValue()) {
-                highestCard = card;
-            }
-        }
-        removeCard(highestCard);
+        removeCard(cards.stream().max(InfluenceCard::compareTo).get());
     }
 
-    //can this and above method be combined into one?
     void removeLowestCard() {
-        InfluenceCard lowestCard = cards.get(0);
-        for (InfluenceCard card : cards) {
-            if (card.getValue() < lowestCard.getValue()) {
-                lowestCard = card;
-            }
-        }
-        removeCard(lowestCard);
+        removeCard(cards.stream().min(InfluenceCard::compareTo).get());
+    }
+
+    void removePhilosophers() {
+        cards.removeIf(card -> card.getValue() == 0);
     }
 
     void flipAllCardsUp() {
-        for (InfluenceCard card : cards) {
-            if (!card.isFaceUp()) {
-                card.flipCardOver();
-            }
-        }
+        cards.stream().filter(card -> !card.isFaceUp()).forEach(
+            InfluenceCard::flipCardOver
+        );
     }
 
-//    void flipCard(InfluenceCard card) {
-//        card.flipCardOver();
-//    }
-
-    int cardSum() {
-        int sum = 0;
-        for (InfluenceCard card : cards) {
-            sum += card.getValue();
-        }
-        return sum;
+    //num is the number of cards added to the other player's influence group (negative if removed)
+    void changeOtherPlayerNumCards(int num) {
+        otherPlayerNumCards += num;
     }
 
-    int numPhilosophers() {
-        int numPhilosophers = 0;
-        for (InfluenceCard card : cards) {
-            if (card.getValue() == 0) {
-                numPhilosophers++;
-            }
-        }
-        return numPhilosophers;
+    boolean isFull() {
+        return (cards.size() >= 5) || (cards.size() + otherPlayerNumCards >= 8);
     }
 
 }

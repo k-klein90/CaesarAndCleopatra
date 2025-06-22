@@ -17,7 +17,7 @@ class InfluenceCard extends PlayableCard {
         if (o instanceof InfluenceCard ic) {
             return value - ic.value;
         }
-        throw new IllegalArgumentException("Unsupported card type");
+        throw new IllegalArgumentException("Unsupported card type"); //necessary?
     }
 
     int getValue() {

@@ -8,6 +8,7 @@ class Game {
                                                          PlayerID.Caesar, new Player());
     private final Map<Vote, Map<PlayerID, InfluenceGroup>> influenceGroups = new LinkedHashMap<>();
     private final Map<Vote, PatricianGroup> patricianGroups = new LinkedHashMap<>();
+    private int numPatriciansLeftToWin = 21; //way to avoid hard coding?
     private final List<VoteOfConfCard> voteOfConfDeck = new ArrayList<>();
     private final List<VoteOfConfCard> voteOfConfDiscard = new ArrayList<>();
     private PlayerID currentPlayerID = PlayerID.Cleopatra;
@@ -60,7 +61,8 @@ class Game {
         return players.get(PlayerID.getOtherPlayerID(currentPlayerID));
     }
 
-    //preparation phase
+                                            //PREPARATION PHASE
+
     void prepInfluenceGroups(HashMap<Vote, InfluenceCard> cards) {
         cards.forEach((vote, card) ->
             playInfluenceCard(vote, card)
@@ -72,28 +74,74 @@ class Game {
         currentPlayerID = PlayerID.getOtherPlayerID(currentPlayerID); //abstract away?
     }
 
-    //play phase
-    //is name adequate? checks end-of-game conditions and which actions player can perform
-    void checkTurnConditions() {
-        if (!getCurrentPlayer().canPlayInfluenceCards()
-            && !getOtherPlayer().canPlayInfluenceCards()) {
-                //endGame("Neither player has any influence cards to play."); //create method for this
-        } else if (!getCurrentPlayer().canPlayActionCards()
-                   && !getOtherPlayer().canPlayActionCards()) {
-            //endGame("All patrician groups are full and no action cards can be played to change this.");
-        } else {
-            if (getCurrentPlayer().hasInfluenceCardInHand()) {
-                //player can play active or passive turn
-            } else if (getCurrentPlayer().canPlayInfluenceCards()
-                       || getCurrentPlayer().canPlayActionCards()){
-                //player can only play passive turn
-            } else {
-                //player cannot play
+                                                //PLAY PHASE
+
+    //terrible name
+    //which way to implement?
+    private boolean checkIfAllInfluenceGroupsAreFull() {
+        for (Map<PlayerID, InfluenceGroup> playerInfluenceMap : influenceGroups.values()) {
+            for (InfluenceGroup influenceGroup : playerInfluenceMap.values()) {
+                if (!influenceGroup.isFull()) return false;
             }
+        }
+        return true;
+//        boolean allGroupsAreFull = true;
+//        influenceGroups.forEach((vote, playerMap) -> {
+//            playerMap.forEach((playerID, group) -> {
+//                if (!group.isFull()) allGroupsAreFull = false;
+//            });
+//        });
+//        return allGroupsAreFull;
+    }
+
+    //use boolean? call other method? change game phase?
+    boolean checkIfEndOfGame() {
+        if (numPatriciansLeftToWin == 0) {
+            //endGame("There are no more patrician cards to win.");
+            return true;
+        } else if (!getCurrentPlayer().hasAnyInfluenceCards()
+                   && !getOtherPlayer().hasAnyInfluenceCards()) {
+            //endGame("Neither player has any influence cards to play.");
+            return true;
+        } else if (checkIfAllInfluenceGroupsAreFull()
+                   && !getCurrentPlayer().hasAnyInfluenceRemovingCards()
+                   && !getOtherPlayer().hasAnyInfluenceRemovingCards()) {
+            //endGame("All patricians' influence groups are full and no action cards can be played to change this.");
+            return true;
+        }
+        return false;
+    }
+
+    void checkTurnConditions() {
+        if (getCurrentPlayer().hasInfluenceCardsInHand()
+            && (!checkIfAllInfluenceGroupsAreFull()
+                || getCurrentPlayer().hasInfluenceRemovingCardsInHand() ) ) {
+            //player can play I cards now (active turn)
+            //if patrician groups are full, this is dependent on player playing an influence-removing card (limit player's A card play options)
+        } else if (getCurrentPlayer().hasAnyInfluenceCards()
+                   && (!checkIfAllInfluenceGroupsAreFull()
+                       || getCurrentPlayer().hasAnyInfluenceRemovingCards() ) ) {
+            //player cannot play I cards now but can play them later, so can draw cards now (passive turn)
+        } else {
+            //player cannot play
         }
     }
 
-    private void playInfluenceCard(Vote vote, InfluenceCard card) {
+//    pseudocode for client side:
+//    void playActiveTurn() {
+//        playActionCard(); //optional
+//        playInfluenceCard(); //1 or 2
+//            //should contain checking for special VoC
+//        refillHand();
+//        drawVoteOfConf();
+//    }
+
+    void playActionCard(ActionCard card) {
+        card.play();
+        getCurrentPlayer().removeCardFromHand(card);
+    }
+
+    void playInfluenceCard(Vote vote, InfluenceCard card) {
         influenceGroups.get(vote).get(currentPlayerID).addCard(card);
         getCurrentPlayer().removeCardFromHand(card);
     }
@@ -105,7 +153,7 @@ class Game {
             voteOfConfDiscard.add(voteOfConfDeck.remove(0));
         } else if (vote.equals(Vote.Orgy)) {
             voteOfConfDiscard.add(voteOfConfDeck.remove(0));
-        } else {
+        } else { //OrgyReshuffle
             while (!voteOfConfDiscard.isEmpty()) {
                 voteOfConfDeck.add(voteOfConfDiscard.remove(0));
             }
@@ -113,36 +161,42 @@ class Game {
         }
     }
 
-    void settleVoteOfConf(Vote group) {
+    Player settleVoteOfConf(Vote group) {
+        PatricianGroup patricianGroup = patricianGroups.get(group);
         InfluenceGroup currPlayerGroup = influenceGroups.get(group).get(currentPlayerID);
         InfluenceGroup otherPlayerGroup = influenceGroups.get(group).get(PlayerID.getOtherPlayerID(currentPlayerID));
-        PatricianGroup patricianGroup = patricianGroups.get(group);
         currPlayerGroup.flipAllCardsUp();
         otherPlayerGroup.flipAllCardsUp();
-        boolean cleoWon;
 
-        if (currPlayerGroup.cardSum() == otherPlayerGroup.cardSum()) {
-            ;   //do nothing
-        } else if (currPlayerGroup.cardSum() > otherPlayerGroup.cardSum()) {
-            if (currPlayerGroup.numPhilosophers() == otherPlayerGroup.numPhilosophers()) {
-                cleoWon = true;
-            } else {
-                cleoWon = false;
-            }
-            //cleo discards high, caes discards low
+        //determine winner
+        Player winner;
+        if (currPlayerGroup.compareTo(otherPlayerGroup) == 0)
+            return null;
+        if (currPlayerGroup.compareTo(otherPlayerGroup) > 0) {
+            winner = getCurrentPlayer();
         } else {
-            if (currPlayerGroup.numPhilosophers() == otherPlayerGroup.numPhilosophers()) {
-                cleoWon = false;
-            } else {
-                cleoWon = true;
-            }
-            //caes discards high, cleo discards low
+            winner = getOtherPlayer();
         }
+        winner.addWonPatrician(patricianGroup.removePatrician());
+        numPatriciansLeftToWin--;
 
+        //discard cards
         if (patricianGroup.isEmpty()) {
             //If a PatricianGroup is emptied after settling the vote, discard the InfluenceCards in each InfluenceGroup
             //and remove the VoC cards relating to the group from the game.
+        } else {
+            currPlayerGroup.removePhilosophers();
+            otherPlayerGroup.removePhilosophers();
+            if (currPlayerGroup.getCardSum() > otherPlayerGroup.getCardSum()) {
+                currPlayerGroup.removeHighestCard();
+                otherPlayerGroup.removeLowestCard();
+            } else {
+                currPlayerGroup.removeLowestCard();
+                otherPlayerGroup.removeHighestCard();
+            }
         }
+
+        return winner;
     }
 
 }

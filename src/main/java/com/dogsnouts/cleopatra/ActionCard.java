@@ -3,18 +3,32 @@ package com.dogsnouts.cleopatra;
 class ActionCard extends PlayableCard {
 
     enum CardType {
-        Assassination,
-        Castling,
-        Scout,
-        Spy,
-        Veto,
-        WrathOfGod
+        Assassination(4),
+        Castling(2),
+        Scout(2),
+        Spy(2),
+        Veto(2),
+        WrathOfGod(1);
+
+        private final int cardCount;
+
+        CardType(int cardCount) {
+            this.cardCount = cardCount;
+        }
+
+        int getCardCount() {
+            return cardCount;
+        }
     }
 
     private final CardType cardType;
 
     ActionCard(CardType cardType) {
         this.cardType = cardType;
+    }
+
+    CardType getCardType() {
+        return cardType;
     }
 
     @Override
@@ -25,7 +39,7 @@ class ActionCard extends PlayableCard {
         if (o instanceof ActionCard ac) {
             return cardType.ordinal() - ac.cardType.ordinal();
         }
-        throw new IllegalArgumentException("Unsupported card type");
+        throw new IllegalArgumentException("Unsupported card type"); //necessary?
     }
 
     void play() {
